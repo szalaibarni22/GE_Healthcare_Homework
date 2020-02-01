@@ -1,0 +1,175 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jan 27 10:44:57 2020
+
+@author: Barnabas Szalai
+"""
+
+
+## Import the neccessary libraries and packages
+
+import numpy as np
+import pandas as pd
+from PIL import Image
+import shutil
+import os
+import csv
+import random
+
+
+## Create 100 random PNG images
+
+for i in range(1,101):
+    imarray = np.random.rand(300,300,3) * 255
+    im = Image.fromarray(imarray.astype('uint8')).convert('RGBA')
+    im.save("random_image"+str(i) +".png")
+    
+## Convert the images into JPG files
+
+for i in range(1,101):
+    png_image = Image.open("random_image"+str(i) +".png")
+    png_image.convert("RGB").save("random"+str(i)+".jpg")
+
+## Create new the directory for PNG and JPG images
+
+directory="PNGs"
+parent_dir="C:\\Users\\Barni\\Desktop\\GE_Healthcare Task"
+path=os.path.join(parent_dir, directory)
+os.mkdir(path)
+
+directory="JPGs"
+parent_dir="C:\\Users\\Barni\\Desktop\\GE_Healthcare Task"
+path=os.path.join(parent_dir, directory)
+os.mkdir(path)
+
+
+## Move PNG files to the newly made directory
+
+source = os.listdir("C:\\Users\\Barni\\Desktop\\GE_Healthcare Task")
+destination = "C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\PNGs"
+for files in source:
+    if files.endswith(".png"):
+        shutil.move(files, destination)
+
+
+## Move JPG files to the newly made directory
+
+source = os.listdir("C:\\Users\\Barni\\Desktop\\GE_Healthcare Task")
+destination = "C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\JPGs"
+for files in source:
+    if files.endswith(".jpg"):
+        shutil.move(files, destination)
+        
+## Create a CSV file from the list of JPG files' names
+
+with open("C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\sample_data.csv", 'w') as f:
+    writer = csv.writer(f)
+    for path, dirs, files in os.walk("C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\JPGs"):
+        for filename in files:
+            writer.writerow([filename])
+
+## Create a Pandas DataFrame from the table for easier access and modifications
+            
+df=pd.read_csv("C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\sample_data.csv",header=None)
+df=pd.DataFrame(df)
+df.columns=['images']
+df.head()
+
+## Labeling the images randomly
+
+label=np.random.randint(2, size=100)
+label
+df["label"]=label
+df
+
+## Create the test, validation and training sets and insert it into the DataFrame
+
+partition1=["test"]*20
+partition2=["validation"]*20
+partition3=["train"]*60
+
+partition=partition1+partition2+partition3
+
+to_shuffle=partition[21:]
+random.shuffle(to_shuffle)
+partition[21:]=to_shuffle
+
+df["partition"]=partition
+df.head(23)
+df.head()
+
+## Recreate the csv with the new columns
+
+df.to_csv(r"C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\sample_data.csv")
+
+data=pd.read_csv("C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\sample_data.csv")
+data.head()
+
+## List the name of files for later relocation
+
+test = data[data['partition']=="test"]
+test = test["images"].tolist()
+#test = [sub[ : -4] for sub in test]
+
+train = data[data['partition']=="train"]
+train = train["images"].tolist()
+
+validation = data[data['partition']=="validation"]
+validation = validation["images"].tolist()
+
+#validation = [sub[ : -4] for sub in validation]
+
+
+## Create new folders to store test, train and validation data
+
+directory="Images"
+parent_dir="C:\\Users\\Barni\\Desktop\\GE_Healthcare Task"
+path=os.path.join(parent_dir, directory)
+os.mkdir(path)
+
+
+directory="Test"
+parent_dir="C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\Images"
+path=os.path.join(parent_dir, directory)
+os.mkdir(path)
+
+directory="Train"
+parent_dir="C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\Images"
+path=os.path.join(parent_dir, directory)
+os.mkdir(path)
+
+directory="Validation"
+parent_dir="C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\Images"
+path=os.path.join(parent_dir, directory)
+os.mkdir(path)
+
+## Transfer the images
+source= "C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\JPGs"
+files = os.listdir("C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\JPGs")
+destination = "C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\Images\\Validation"
+
+for f in files:
+    if f in validation:
+       shutil.move(source+"\\"+f, destination)
+        
+            
+source= "C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\JPGs"
+files = os.listdir("C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\JPGs")
+destination = "C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\Images\\Test"
+
+for f in files:
+    if f in test:
+       shutil.move(source+"\\"+f, destination)   
+        
+            
+source= "C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\JPGs"
+files = os.listdir("C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\JPGs")
+destination = "C:\\Users\\Barni\\Desktop\\GE_Healthcare Task\\Images\\Train"
+
+for f in files:
+    if f in train:
+       shutil.move(source+"\\"+f, destination)              
+            
+os.rmdir(source)
+            
+
